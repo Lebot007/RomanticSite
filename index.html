@@ -20,7 +20,9 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Nunito+Sans:wght@400;600;700;800&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
 /* ============ BASE / TEMA FLORESTA ENCANTADA ============ */
 :root{
@@ -154,30 +156,35 @@ body.aberto .deslize{opacity:.9}
 @supports not (aspect-ratio: 1){ .env{height:min(57vw,277px)} }
 .env-fundo,.env-frente,.flap{position:absolute; border-radius:10px}
 .env-fundo{inset:0; background:linear-gradient(160deg,#17452f,#0e3323);
+  transform:translateZ(-20px);
   box-shadow:0 24px 60px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,217,138,.22);}
-.papel{position:absolute; left:5%; right:5%; top:6%; bottom:8%; border-radius:6px; z-index:2;
+.papel{position:absolute; left:5%; right:5%; top:6%; bottom:8%; border-radius:6px;
   background:linear-gradient(170deg,#f6ecd6,#e8d9b8);
   box-shadow:0 6px 22px rgba(0,0,0,.35);
-  transition:transform 1s cubic-bezier(.3,.8,.3,1) , z-index 0s;
+  transform:translateZ(-8px);
+  transition:transform 1.05s cubic-bezier(.3,.75,.3,1);
   display:flex; align-items:center; justify-content:center;}
 .papel::after{content:'♥'; color:rgba(179,64,90,.5); font-size:2rem}
-.env-frente{inset:0; z-index:3; background:linear-gradient(200deg,#1b5238,#123c29);
+.env-frente{inset:0; background:linear-gradient(200deg,#1b5238,#123c29);
+  transform:translateZ(6px);
   clip-path:polygon(0 8%, 50% 58%, 100% 8%, 100% 100%, 0 100%);
   box-shadow:inset 0 1px 0 rgba(255,217,138,.25);}
-.flap{left:0; right:0; top:0; height:62%; z-index:4; transform-origin:top center;
+.flap{left:0; right:0; top:0; height:62%; transform-origin:top center;
   background:linear-gradient(180deg,#1d5a3e,#154630);
+  transform:translateZ(24px);
   clip-path:polygon(0 0, 100% 0, 50% 100%);
   transition:transform .8s cubic-bezier(.5,.05,.3,1);
   box-shadow:inset 0 -1px 0 rgba(255,217,138,.3);}
-.lacre{position:absolute; left:50%; top:52%; z-index:5; width:74px; height:74px;
-  transform:translate(-50%,-50%); border-radius:50%;
+.lacre{position:absolute; left:50%; top:52%; width:74px; height:74px;
+  transform:translate(-50%,-50%) translateZ(48px); border-radius:50%;
   background:radial-gradient(circle at 34% 30%, #d4607a, #a2334e 62%, #7c2038);
   box-shadow:0 6px 18px rgba(0,0,0,.5), inset 0 2px 6px rgba(255,255,255,.28), inset 0 -4px 8px rgba(0,0,0,.35);
   display:grid; place-items:center; font-family:var(--mao); font-size:2rem; color:#ffe3e9;
   transition:transform .5s cubic-bezier(.3,.7,.3,1.4), opacity .45s ease .3s;}
-.env.rachando .lacre{transform:translate(-50%,-50%) scale(1.18) rotate(-9deg)}
-.env.abreflap .flap{transform:rotateX(178deg); z-index:1}
-.env.sobe .papel{transform:translateY(-52%) scale(1.03); z-index:6}
+.env.rachando .lacre{transform:translate(-50%, 60%) scale(1.1) rotate(28deg) translateZ(48px);
+  opacity:0; transition:transform .7s cubic-bezier(.4,.1,.7,1), opacity .5s ease .25s;}
+.env.abreflap .flap{transform:rotateX(178deg) translateZ(24px)}
+.env.sobe .papel{transform:translateY(-58%) translateZ(46px) scale(1.04)}
 .palco.aberta .env{transform:translateY(30px) scale(.72); opacity:0; pointer-events:none}
 .dica-lacre{ text-align:center; color:var(--dim); font-size:.85rem; letter-spacing:.12em; margin-top:4px;
   transition:opacity .5s;}
@@ -795,10 +802,21 @@ function escrever(el, pena, dur, cb){
     else { pena.style.transition='opacity .5s'; pena.style.opacity = 0; cb && cb(); }
   })(t0);
 }
-window.addEventListener('load', () => {
-  const fontes = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
-  fontes.then(() => setTimeout(() => escrever(preNome, prePena, 1500, () => pre.classList.add('mostra')), 350));
-});
+function iniciarPre(){
+  setTimeout(() => escrever(preNome, prePena, RM ? 0 : 1100, () => {
+    preNome.parentElement.style.width = 'auto';   /* corrige troca de fonte sem pulo */
+    pre.classList.add('mostra');
+  }), 150);
+}
+function fontesProntas(){
+  /* espera só a manuscrita (Caveat), com teto de 900ms pra nunca travar a abertura */
+  const p = (document.fonts && document.fonts.load)
+    ? document.fonts.load('60px Caveat', 'Thais').catch(() => {})
+    : Promise.resolve();
+  Promise.race([p, new Promise(r => setTimeout(r, 900))]).then(iniciarPre);
+}
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fontesProntas, { once:true });
+else fontesProntas();
 $('#btnAbrir').addEventListener('click', () => {
   pre.classList.add('done');
   document.body.classList.add('aberto');
@@ -813,7 +831,7 @@ function abrirCarta(){
   $('#dicaLacre').classList.add('some');
   env.classList.add('rachando');
   setTimeout(() => env.classList.add('abreflap'), 420);
-  setTimeout(() => env.classList.add('sobe'), 1050);
+  setTimeout(() => env.classList.add('sobe'), 1250);
   setTimeout(() => {
     palco.classList.add('aberta');
     cartaArt.querySelectorAll('.linha').forEach((l,i) => {
@@ -837,13 +855,13 @@ function cardEl(txt, i){
 }
 function deckRender(){
   stage.innerHTML = '';
-  deck.slice(0,3).reverse().forEach((txt, ri) => {
-    const idx = 2 - ri;               /* 0 = topo */
-    const el = cardEl(txt, CFG.motivos.length - deck.length + idx);
-    if(idx === 0){ el.classList.add('top'); prender(el); }
+  const vis = deck.slice(0,3);
+  for(let i = vis.length-1; i >= 0; i--){   /* empilha de baixo pra cima; i=0 é o topo */
+    const el = cardEl(vis[i], CFG.motivos.length - deck.length + i);
+    if(i === 0){ el.classList.add('top'); prender(el); }
     stage.appendChild(el);
-    requestAnimationFrame(() => posicionar(el, idx));
-  });
+    requestAnimationFrame(() => posicionar(el, i));
+  }
   $('#deckCount').textContent = Math.min(CFG.motivos.length - deck.length + 1, CFG.motivos.length) + ' / ' + CFG.motivos.length;
   if(!deck.length){ $('#deckFim').classList.add('in'); $('#deckCount').textContent = CFG.motivos.length + ' / ' + CFG.motivos.length; }
 }
@@ -860,25 +878,27 @@ function posicionar(el, idx){
 }
 function prender(el){
   el.addEventListener('pointerdown', e => {
-    if(stage.querySelectorAll('.card').length && stage.querySelector('.card.top') !== el) return;
+    if(!el.classList.contains('top') || el.dataset.voando) return;
     e.preventDefault();
     el.setPointerCapture(e.pointerId);
     arrastando = { el, x0:e.clientX, y0:e.clientY, dx:0, dy:0, t0:performance.now() };
     el.classList.add('arrastando');
   });
   el.addEventListener('pointermove', e => {
-    if(!arrastando || arrastando.el !== el) return;
+    if(!arrastando || arrastando.el !== el || el.dataset.voando) return;
     arrastando.dx = e.clientX - arrastando.x0;
     arrastando.dy = e.clientY - arrastando.y0;
     el.style.transform = 'translate(' + arrastando.dx + 'px,' + (arrastando.dy*.35) + 'px) rotate(' + (arrastando.dx*.06) + 'deg)';
   });
   const soltar = e => {
-    if(!arrastando || arrastando.el !== el) return;
+    if(!arrastando || arrastando.el !== el || el.dataset.voando) return;
     const dt = Math.max(16, performance.now() - arrastando.t0);
     const vel = Math.abs(arrastando.dx)/dt;
     el.classList.remove('arrastando');
     if(Math.abs(arrastando.dx) > 90 || vel > .55){
       const dir = arrastando.dx > 0 ? 1 : -1;
+      el.dataset.voando = '1';            /* trava: nenhuma outra pegada nesse card */
+      el.classList.remove('top');
       el.animate([
         { transform: el.style.transform, opacity:1 },
         { transform:'translate(' + (dir*window.innerWidth*.9) + 'px,' + (arrastando.dy*.4) + 'px) rotate(' + (dir*24) + 'deg)', opacity:0 }
