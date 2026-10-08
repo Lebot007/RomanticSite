@@ -36,7 +36,7 @@
   --ui:'Nunito Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth; -webkit-user-select:none; user-select:none}
 body{
   background:var(--bg0); color:var(--ink); font-family:var(--ui);
   overflow-x:hidden; -webkit-tap-highlight-color:transparent;
@@ -81,9 +81,12 @@ h1,h2,h3{font-family:var(--display); font-weight:600; line-height:1.08}
   background:radial-gradient(90% 70% at 50% 40%, #0a2b20 0%, var(--bg0) 75%);
   transition:opacity .8s ease, visibility .8s;}
 #pre.done{opacity:0; visibility:hidden; pointer-events:none}
-.preNomeWrap{position:relative; overflow:hidden; max-width:92vw}
+.preNomeWrap{position:relative; overflow:hidden; max-width:92vw;
+  width:0; box-sizing:content-box;                 /* nada aparece antes da escrita (sem "piscar") */
+  padding:.4em 0 .5em; margin:-.4em 0 -.5em;}       /* folga vertical p/ o glow não ser ceifado */
 .preNome{font-family:var(--mao); font-weight:600; color:var(--gold);
   font-size:clamp(3.4rem, 15vw, 6.5rem); line-height:1.15; white-space:nowrap;
+  padding:0 .18em;                                   /* o "s" e o brilho cabem dentro do clip */
   text-shadow:0 0 26px rgba(255,217,138,.45);}
 .prePena{position:absolute; top:52%; right:0; width:10px; height:10px; border-radius:50%;
   background:#fff6dd; box-shadow:0 0 14px 4px rgba(255,224,150,.85); opacity:0;}
@@ -151,8 +154,9 @@ body.aberto .deslize{opacity:.9}
 .palco{perspective:1400px; display:flex; justify-content:center; padding:34px 0 10px; min-height:340px;
   transition:min-height .9s ease .25s, padding .9s ease .25s;}
 .palco.aberta{min-height:0; padding:0}
-.env{position:relative; width:min(88vw,430px); aspect-ratio:1.55/1; transform-style:preserve-3d;
-  transition:transform .9s cubic-bezier(.4,.7,.3,1), opacity .7s ease .1s; cursor:pointer;}
+.envWrap{transition:transform .9s cubic-bezier(.4,.7,.3,1), opacity .7s ease .1s}
+.palco.aberta .envWrap{transform:translateY(30px) scale(.72); opacity:0; pointer-events:none}
+.env{position:relative; width:min(88vw,430px); aspect-ratio:1.55/1; transform-style:preserve-3d; cursor:pointer;}
 @supports not (aspect-ratio: 1){ .env{height:min(57vw,277px)} }
 .env-fundo,.env-frente,.flap{position:absolute; border-radius:10px}
 .env-fundo{inset:0; background:linear-gradient(160deg,#17452f,#0e3323);
@@ -185,7 +189,6 @@ body.aberto .deslize{opacity:.9}
   opacity:0; transition:transform .7s cubic-bezier(.4,.1,.7,1), opacity .5s ease .25s;}
 .env.abreflap .flap{transform:rotateX(178deg) translateZ(24px)}
 .env.sobe .papel{transform:translateY(-58%) translateZ(46px) scale(1.04)}
-.palco.aberta .env{transform:translateY(30px) scale(.72); opacity:0; pointer-events:none}
 .dica-lacre{ text-align:center; color:var(--dim); font-size:.85rem; letter-spacing:.12em; margin-top:4px;
   transition:opacity .5s;}
 .palco.aberta ~ .dica-lacre, .dica-lacre.some{opacity:0}
@@ -335,12 +338,14 @@ footer .ps{margin-top:16px; color:var(--dim); font-size:.82rem; letter-spacing:.
       <h2 class="titulo" data-reveal>uma carta <em>selada</em>, só sua</h2>
       <p class="subsecao" data-reveal>cheega mais. quebra o lacre com um toque — ela só abre pra você.</p>
       <div class="palco" id="palco">
-        <div class="env" id="env" role="button" tabindex="0" aria-label="abrir a carta">
-          <div class="env-fundo"></div>
-          <div class="papel"></div>
-          <div class="env-frente"></div>
-          <div class="flap"></div>
-          <div class="lacre" id="lacre">T</div>
+        <div class="envWrap">
+          <div class="env" id="env" role="button" tabindex="0" aria-label="abrir a carta">
+            <div class="env-fundo"></div>
+            <div class="papel"></div>
+            <div class="env-frente"></div>
+            <div class="flap"></div>
+            <div class="lacre" id="lacre">T</div>
+          </div>
         </div>
       </div>
       <p class="dica-lacre" id="dicaLacre">· toque no lacre ·</p>
@@ -403,7 +408,7 @@ footer .ps{margin-top:16px; color:var(--dim); font-size:.82rem; letter-spacing:.
   </div>
 </div>
 
-<noscript><p style="text-align:center;padding:40px">ative o javascript pra ver a floresta acender. 💚</p></noscript>
+<noscript><style>.preNomeWrap{width:auto !important}</style><p style="text-align:center;padding:40px">ative o javascript pra ver a floresta acender. 💚</p></noscript>
 
 <script>
 /* ════════════════════════════════════════════════════════════
@@ -789,7 +794,7 @@ $('#btnMusica').addEventListener('click', () => { musicaOn ? musicaDesligar() : 
 /* ════════════ ABERTURA (preloader) ════════════ */
 const pre = $('#pre'), preNome = $('#preNome'), prePena = $('#prePena');
 function escrever(el, pena, dur, cb){
-  const w = el.scrollWidth;
+  const w = Math.ceil(el.getBoundingClientRect().width) + 2;   /* inclui a folga do "s" */
   el.parentElement.style.width = '0px';
   if(RM){ el.parentElement.style.width = w+'px'; pena.style.opacity = 0; cb && cb(); return; }
   pena.style.opacity = 1;
@@ -833,11 +838,10 @@ function abrirCarta(){
   setTimeout(() => env.classList.add('abreflap'), 420);
   setTimeout(() => env.classList.add('sobe'), 1250);
   setTimeout(() => {
-    palco.classList.add('aberta');
-    cartaArt.querySelectorAll('.linha').forEach((l,i) => {
+    palco.classList.add('aberta');    cartaArt.querySelectorAll('.linha').forEach((l,i) => {
       setTimeout(() => l.classList.add('in'), RM ? 0 : 350 + i*160);
     });
-  }, 1750);
+  }, 2400);   /* fade só depois que o papel termina de subir (1250+1050) */
 }
 env.addEventListener('click', abrirCarta);
 env.addEventListener('keydown', e => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); abrirCarta(); } });
@@ -899,12 +903,15 @@ function prender(el){
       const dir = arrastando.dx > 0 ? 1 : -1;
       el.dataset.voando = '1';            /* trava: nenhuma outra pegada nesse card */
       el.classList.remove('top');
-      el.animate([
+      const dur = RM ? 120 : 420;
+      let feito = false;
+      const concluir = () => { if(feito) return; feito = true; deck.shift(); deckRender(); };
+      const anim = el.animate([
         { transform: el.style.transform, opacity:1 },
         { transform:'translate(' + (dir*window.innerWidth*.9) + 'px,' + (arrastando.dy*.4) + 'px) rotate(' + (dir*24) + 'deg)', opacity:0 }
-      ], { duration: RM ? 120 : 420, easing:'cubic-bezier(.2,.7,.3,1)' }).onfinish = () => {
-        deck.shift(); deckRender();
-      };
+      ], { duration: dur, easing:'cubic-bezier(.2,.7,.3,1)' });
+      anim.onfinish = concluir;
+      setTimeout(concluir, dur + 140);    /* rede de segurança: nunca trava a pilha */
     } else {
       posicionar(el, 0);
     }
@@ -1021,6 +1028,10 @@ window.addEventListener('resize', () => {
   clearTimeout(rT);
   rT = setTimeout(() => { vagasResize(); heartResize(); heartBuild(); if(RM) heartDraw(600); }, 180);
 });
+
+/* ════════════ ANTI-CÓPIA (sem matar os cliques) ════════════ */
+['copy','cut','selectstart'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+document.addEventListener('contextmenu', e => e.preventDefault());
 
 /* ════════════ START ════════════ */
 vagasResize(); heartResize(); heartBuild();
